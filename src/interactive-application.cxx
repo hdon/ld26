@@ -198,32 +198,10 @@ namespace Game
         glPushMatrix();
         glOrtho(0, ScreenWidth, ScreenHeight, 0, 1, -1);
 
+        /* Draw the world */
         glBegin(GL_QUADS);
         world->draw();
         glEnd();
-
-        /*
-        glBegin(GL_QUADS);
-
-        if (wireworldGrid) wireworldGrid->Draw();
-
-        // draw mouse
-        double intensity = fabs(sin(Frame*0.045)) * 0.2;
-        glColor3d(intensity, intensity, intensity);
-        glVertex2d(mx-0.5,my-0.5);
-        glVertex2d(mx-0.5,mY+1.5);
-        glVertex2d(mX+1.5,mY+1.5);
-        glVertex2d(mX+1.5,my-0.5);
-        glEnd();
-
-        glColor3ub(255,255,255);
-        glBegin(GL_LINE_LOOP);
-        glVertex2i(mx  ,my  );
-        glVertex2i(mx  ,my+1);
-        glVertex2i(mx+1,my+1);
-        glVertex2i(mx+1,my  );
-        glEnd();
-        */
 
         // Relinquish the GL
         glMatrixMode(GL_PROJECTION);
@@ -234,10 +212,6 @@ namespace Game
 
         static unsigned int err=0;
         glError(NULL, &err);
-    }
-
-    void DefaultSetup(int w, int h, bool makeWireWorldGrid)
-    {
     }
 
     void Mouse(int x, int y)
