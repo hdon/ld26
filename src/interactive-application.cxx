@@ -5,6 +5,7 @@
 #include <SDL.h>
 #include <list>
 #include <vector>
+#include <fstream>
 #ifdef __MACH__
 #  include <OpenGL/gl.h>
 #else
@@ -76,10 +77,14 @@ struct World {
     cursorRaft = -1;
   }
 
+  World(istream& in);
+
   ~World();
 
   void draw();
   bool mouse(int x, int y);
+
+  friend ostream & operator<<(ostream &out, const World &);
 };
 
 struct TileRaft {
@@ -98,6 +103,8 @@ struct TileRaft {
   {
   }
 
+  TileRaft(istream& in);
+
   void draw(GLdouble xOff, GLdouble yOff)
   {
     glColor3d(1,1,1);
@@ -105,6 +112,8 @@ struct TileRaft {
     for (int x=0; x<width; x++)
       drawTile(x * TILESIZE + xOff, y * TILESIZE + yOff, tiles[y*width+x]);
   }
+
+  friend ostream & operator<<(ostream &out, const TileRaft &);
 };
 
 World::~World()
@@ -160,6 +169,64 @@ bool World::mouse(int x, int y)
   }
   return false;
 }
+
+ostream& operator<<(ostream& out, const World& world)
+{
+  out << "LD26____MAPFILE "
+      << (unsigned int)world.rafts.size() << ' ';
+  for (vector<TileRaft*>::const_iterator raft = world.rafts.begin(); raft != world.rafts.end(); ++raft)
+    out << **raft << ' ';
+
+  return out;
+}
+
+ostream& operator<<(ostream& out, const TileRaft& raft)
+{
+  out << "raft"
+      << raft.width << ' '
+      << raft.height << ' ';
+  for (int i=0; i<raft.width*raft.height; i++)
+    out << raft.tiles[i];
+
+  return out;
+}
+
+TileRaft::TileRaft(istream& in)
+{
+  char magic[4];
+  in.read(magic, 4);
+  in >> width
+     >> height;
+  OGLCONSOLE_Print("TileRaft::TileRaft(istream) dimensions: %dx%d\n", width, height);
+  tiles.resize(width*height);
+  in.read(((char*)&tiles[0]), width*height);
+  xOff = 0;
+  yOff = 0;
+}
+
+World::World(istream& in)
+{
+  char magic[16];
+  unsigned int nrafts;
+  in.read(magic, 15);
+  magic[15] = '\0';
+  OGLCONSOLE_Print("World::World(istream) magic: \"%s\"\n", magic);
+  in >> nrafts;
+  OGLCONSOLE_Print("World::World(istream) loading %d tile rafts\n", nrafts);
+  rafts.resize(nrafts);
+  for (unsigned int i=0; i<nrafts; i++)
+  {
+    rafts[i] = new TileRaft(in);
+  }
+
+  xOff = 0;
+  yOff = 0;
+  editMode = true;
+  cursorX = -1;
+  cursorY = -1;
+  cursorRaft = -1;
+}
+
 
 namespace Game
 {
@@ -241,6 +308,41 @@ namespace Game
                 }
         }
         return false;
+    }
+
+    static string mapFilename(string filename)
+    {
+      string filename2 = "data/maps/";
+      filename2 += filename;
+      filename2 += ".map";
+      return filename2;
+    }
+
+    bool SaveMap(string filename)
+    {
+      ofstream f;
+      filename = mapFilename(filename);
+
+      f.open(filename.c_str());
+      f << *world;
+      f.close();
+
+      OGLCONSOLE_Print("saved map file \"%s\"\n", filename.c_str());
+      return true;
+    }
+
+    bool LoadMap(string filename)
+    {
+      filename = mapFilename(filename);
+      ifstream f(filename.c_str());
+
+      if (world)
+        delete world;
+      world = new World(f);
+      f.close();
+
+      OGLCONSOLE_Print("loaded map file \"%s\"\n", filename.c_str());
+      return true;
     }
 };
 

@@ -50,6 +50,18 @@ void conCB(OGLCONSOLE_Console console, char* line) {
     quit = 1;
     return;
   }
+  else if (tokens[0] == "savemap")
+  {
+    CHECK_ARGS(2);
+    Game :: SaveMap(tokens[1]);
+    return;
+  }
+  else if (tokens[0] == "loadmap")
+  {
+    CHECK_ARGS(2);
+    Game :: LoadMap(tokens[1]);
+    return;
+  }
   else
   {
     OGLCONSOLE_Print("Unknown command: \"%s\"\n", tokens[0].c_str());

@@ -1,6 +1,8 @@
 #ifndef INTERACTIVE_APPLICATION_HXX
 #define INTERACTIVE_APPLICATION_HXX
 #include <SDL_events.h>
+#include <string>
+
 namespace Game
 {
     void Init();
@@ -11,6 +13,9 @@ namespace Game
     bool MouseButton(int button, bool down);
     bool Key(int key, bool down);
     bool SDLEvent(SDL_Event *e);
+
+    bool SaveMap(std::string filename);
+    bool LoadMap(std::string filename);
 };
 #endif
 
