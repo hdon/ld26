@@ -14,31 +14,50 @@
 #include <time.h>
 #include <math.h>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+#include <vector>
 
 #define FPS 40
 
 using namespace std;
 
+int quit = 0;
 int ScreenWidth=640;
 int ScreenHeight=480;
 Uint32 video_flags = SDL_OPENGL|SDL_RESIZABLE|SDL_DOUBLEBUF;
 
 GLuint tilesTexture;
 SDL_Event event;
-void conCB(OGLCONSOLE_Console console, char* cmd) {
-  //OGLCONSOLE_Print("You've come up with a really swell command!\nHere it is again: \"%s\"", cmd);
-  unsigned char buf[257];
-  unsigned char n = '\0';
 
-  while (n < 255) {
-    buf[(int)n] = n+1;
-    n++;
+#define CHECK_ARGS(n) do{if (tokens.size()!=n) {nae=n;goto wrong_num_args;}}while(0)
+void conCB(OGLCONSOLE_Console console, char* line) {
+  istringstream iss(line);
+  vector<string> tokens;
+  copy(istream_iterator<string>(iss),
+      istream_iterator<string>(),
+      back_inserter<vector<string> >(tokens));
+  if (tokens.size() == 0)
+    return;
+
+  int nae; // num args expected
+
+  if (tokens[0] == "quit")
+  {
+    CHECK_ARGS(1);
+    quit = 1;
+    return;
   }
+  else
+  {
+    OGLCONSOLE_Print("Unknown command: \"%s\"\n", tokens[0].c_str());
+  }
+  return;
 
-  buf[255] = '\n';
-  buf[256] = '\0';
-
-  OGLCONSOLE_Print((char*)buf);
+  wrong_num_args:
+  OGLCONSOLE_Print("Expected %d arguments but found %d\n", nae, tokens.size());
 };
 
 SDL_Surface *tileSurface;
@@ -46,7 +65,6 @@ int main(int argc, char **argv)
 {
     bool fs = false;
     int fps_counter = 0, fps_timer = 0;
-    int quit = 0;
 
     srandom(time(NULL));
 
