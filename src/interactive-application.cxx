@@ -193,12 +193,16 @@ ostream& operator<<(ostream& out, const TileRaft& raft)
 
 TileRaft::TileRaft(istream& in)
 {
-  char magic[4];
+  char magic[5];
   in.read(magic, 4);
+  magic[4] = '\0';
+  OGLCONSOLE_Print("TileRaft::TileRaft(istream) magic: %s\n", magic);
   in >> width
      >> height;
   OGLCONSOLE_Print("TileRaft::TileRaft(istream) dimensions: %dx%d\n", width, height);
   tiles.resize(width*height);
+  char sp;
+  in.read(&sp, 1); // eat extra space
   in.read(((char*)&tiles[0]), width*height);
   xOff = 0;
   yOff = 0;
@@ -214,6 +218,8 @@ World::World(istream& in)
   in >> nrafts;
   OGLCONSOLE_Print("World::World(istream) loading %d tile rafts\n", nrafts);
   rafts.resize(nrafts);
+  char sp;
+  in.read(&sp, 1); // eat extra space
   for (unsigned int i=0; i<nrafts; i++)
   {
     rafts[i] = new TileRaft(in);
