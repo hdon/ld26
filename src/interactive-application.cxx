@@ -66,7 +66,7 @@ struct World {
   int cursorRaft;
   int cursorX;
   int cursorY;
-  int pickedTile;
+  static int pickedTile;
   bool cursorPainting;
 
   World()
@@ -77,7 +77,7 @@ struct World {
     cursorX = -1;
     cursorY = -1;
     cursorRaft = -1;
-    pickedTile = 0;
+    cursorPainting = false;
   }
 
   World(istream& in);
@@ -145,6 +145,8 @@ bool World::validateCursor()
 
   return true;
 }
+
+int World::pickedTile = 0;
 
 void World::draw()
 {
@@ -290,7 +292,7 @@ World::World(istream& in)
   cursorX = -1;
   cursorY = -1;
   cursorRaft = -1;
-  pickedTile = 0;
+  cursorPainting = false;
 }
 
 
@@ -298,13 +300,15 @@ namespace Game
 {
     bool pause=true;
     bool mdown = false;
-    World *world = new World;
+    World *gameWorld = new World;
+    World *scratchWorld = new World;
+    World *activeWorld = gameWorld;
 
     void Init()
     {
-      TileRaft *raft = new TileRaft(32, 128);
-      for (int i=0; i<32*128; i++) raft->tiles[i] = i%4;
-      world->rafts.push_back(raft);
+      TileRaft *raft = new TileRaft(16, 16);
+      for (int i=0; i<16*16; i++) raft->tiles[i] = i;
+      scratchWorld->rafts.push_back(raft);
     }
 
     void Step()
@@ -333,7 +337,7 @@ namespace Game
 
         /* Draw the world */
         glBegin(GL_QUADS);
-        world->draw();
+        activeWorld->draw();
         glEnd();
 
         // Relinquish the GL
@@ -349,12 +353,12 @@ namespace Game
 
     void Mouse(int x, int y)
     {
-      world->mouse(x, y);
+      activeWorld->mouse(x, y);
     }
 
     bool MouseButton(int button, bool down)
     {
-      return world->mouseButton(button, down);
+      return activeWorld->mouseButton(button, down);
     }
 
     bool SDLEvent(SDL_Event *e)
@@ -365,11 +369,36 @@ namespace Game
                 if (e->key.state)
                 switch (e->key.keysym.sym)
                 {
-                    default:
-                        return false;
+                  case SDLK_F3:
+                    OGLCONSOLE_Print("scratch toggle\n");
+                    activeWorld =
+                      activeWorld == gameWorld ?
+                      scratchWorld : gameWorld;
+                    return true;
+
+                  default:
+                    return false;
                 }
         }
         return false;
+    }
+
+    bool Key(int key, bool down)
+    {
+      if (down)
+      switch (key)
+      {
+        case SDLK_F3:
+          OGLCONSOLE_Print("scratch toggle\n");
+          activeWorld =
+            activeWorld == gameWorld ?
+            scratchWorld : gameWorld;
+          return true;
+
+        default:
+          break;
+      }
+      return false;
     }
 
     static string mapFilename(string filename)
@@ -386,7 +415,7 @@ namespace Game
       filename = mapFilename(filename);
 
       f.open(filename.c_str());
-      f << *world;
+      f << *gameWorld;
       f.close();
 
       OGLCONSOLE_Print("saved map file \"%s\"\n", filename.c_str());
@@ -398,9 +427,10 @@ namespace Game
       filename = mapFilename(filename);
       ifstream f(filename.c_str());
 
-      if (world)
-        delete world;
-      world = new World(f);
+      if (gameWorld)
+        delete gameWorld;
+      gameWorld = new World(f);
+      activeWorld = gameWorld;
       f.close();
 
       OGLCONSOLE_Print("loaded map file \"%s\"\n", filename.c_str());
