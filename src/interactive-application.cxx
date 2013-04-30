@@ -447,5 +447,59 @@ namespace Game
           raft->tiles[x+y*raft->width] = tile;
       }
     }
+
+    void fillH()
+    {
+      if (activeWorld->validateCursor())
+      {
+        TileRaft* raft = activeWorld->rafts[activeWorld->cursorRaft];
+        for (int x=0; x<raft->width; x++)
+          raft->tiles[x+activeWorld->cursorY*raft->width] = activeWorld->pickedTile;
+      }
+    }
+
+    void fillV()
+    {
+      if (activeWorld->validateCursor())
+      {
+        TileRaft* raft = activeWorld->rafts[activeWorld->cursorRaft];
+        for (int y=0; y<raft->height; y++)
+          raft->tiles[activeWorld->cursorX+y*raft->width] = activeWorld->pickedTile;
+      }
+    }
+
+    void flood(bool vertical, bool ascending)
+    {
+      if (activeWorld->validateCursor())
+      {
+        TileRaft* raft = activeWorld->rafts[activeWorld->cursorRaft];
+        int minX, maxX, minY, maxY, dX, dY;
+        if (vertical)
+        {
+          minX = 0;
+          maxX = raft->width;
+          dX = 1;
+          if (ascending)
+          {
+            minY = activeWorld->cursorY;
+            maxY = raft->height;
+          }
+          else
+          {
+            minY = 0;
+            maxY = activeWorld->cursorY + 1;
+          }
+        }
+        else
+        {
+          return; // TODO implement horizontal
+        }
+
+            dY = 1;
+        for (int y = minY; y != maxY; y += dY)
+        for (int x = minX; x != maxX; x += dX)
+          raft->tiles[x+y*raft->width] = activeWorld->pickedTile;
+      }
+    }
 };
 

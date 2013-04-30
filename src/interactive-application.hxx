@@ -18,6 +18,9 @@ namespace Game
     bool LoadMap(std::string filename);
 
     void fillMap(unsigned char tile);
+    void fillH();
+    void fillV();
+    void flood(bool vertical, bool ascending);
 };
 #endif
 

@@ -69,6 +69,36 @@ void conCB(OGLCONSOLE_Console console, char* line) {
     tile = atoi(tokens[1].c_str());
     Game :: fillMap(tile);
   }
+  else if (tokens[0] == "fillh")
+  {
+    CHECK_ARGS(1);
+    Game :: fillH();
+  }
+  else if (tokens[0] == "fillv")
+  {
+    CHECK_ARGS(1);
+    Game :: fillV();
+  }
+  else if (tokens[0] == "flood")
+  {
+    CHECK_ARGS(2);
+    // TODO more directions
+    bool asc;
+    if (tokens[1] == "down")
+    {
+      asc = true;
+    }
+    else if (tokens[1] == "up")
+    {
+      asc = false;
+    }
+    else
+    {
+      OGLCONSOLE_Print("cannot flood \"%s\"\n", tokens[1]);
+      return;
+    }
+    Game :: flood(true, asc);
+  }
   else
   {
     OGLCONSOLE_Print("Unknown command: \"%s\"\n", tokens[0].c_str());
