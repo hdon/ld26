@@ -66,6 +66,8 @@ struct World {
   int cursorRaft;
   int cursorX;
   int cursorY;
+  int pickedTile;
+  bool cursorPainting;
 
   World()
   {
@@ -75,6 +77,7 @@ struct World {
     cursorX = -1;
     cursorY = -1;
     cursorRaft = -1;
+    pickedTile = 0;
   }
 
   World(istream& in);
@@ -83,6 +86,8 @@ struct World {
 
   void draw();
   bool mouse(int x, int y);
+  bool mouseButton(int button, bool down);
+  bool validateCursor();
 
   friend ostream & operator<<(ostream &out, const World &);
 };
@@ -124,6 +129,23 @@ World::~World()
   }
 }
 
+bool World::validateCursor()
+{
+  if (cursorRaft < 0
+  || cursorRaft >= (int)rafts.size()
+  || cursorX < 0
+  || cursorY < 0)
+    return false;
+  
+  TileRaft* raft = rafts[cursorRaft];
+
+  if (cursorX >= raft->width
+  ||  cursorY >= raft->height)
+    return false;
+
+  return true;
+}
+
 void World::draw()
 {
   for (vector<TileRaft*>::iterator raft = rafts.begin(); raft != rafts.end(); ++raft)
@@ -139,13 +161,16 @@ void World::draw()
       TileRaft* raft = rafts[cursorRaft];
       drawTile(cursorX * TILESIZE + xOff + raft->xOff,
                cursorY * TILESIZE + yOff + raft->yOff,
-               frameNumber / 10 % 2 + 1); // blink!
+               frameNumber / 10 % 2 ? 5 : 37); // blink!
     }
   }
 }
 
 bool World::mouse(int x, int y)
 {
+  if (!editMode)
+    return false;
+
   OGLCONSOLE_Print("World::mouse(%d, %d)\n", x, y);
   x -= xOff;
   y -= yOff;
@@ -164,7 +189,41 @@ bool World::mouse(int x, int y)
       cursorRaft = i;
       cursorX = tileX;
       cursorY = tileY;
+      if (cursorPainting)
+      {
+        raft->tiles[cursorX + cursorY*raft->width] = pickedTile;
+      }
       return true;
+    }
+  }
+  return false;
+}
+
+bool World::mouseButton(int button, bool down)
+{
+  OGLCONSOLE_Print("World::mouseButton(%d, %s)\n", button, down?"pressed":"released");
+  if (editMode)
+  {
+    if (down && validateCursor())
+    {
+      OGLCONSOLE_Print("World::mouseButton() acting..\n");
+
+      TileRaft* raft = rafts[cursorRaft];
+
+      if (button == 3)
+      {
+        pickedTile = raft->tiles[cursorX + cursorY*raft->width];
+      }
+
+      else if (button == 1)
+      {
+        raft->tiles[cursorX + cursorY*raft->width] = pickedTile;
+        cursorPainting = true;
+      }
+    }
+    else if (cursorPainting && !down)
+    {
+      cursorPainting = false;
     }
   }
   return false;
@@ -231,6 +290,7 @@ World::World(istream& in)
   cursorX = -1;
   cursorY = -1;
   cursorRaft = -1;
+  pickedTile = 0;
 }
 
 
@@ -294,11 +354,7 @@ namespace Game
 
     bool MouseButton(int button, bool down)
     {
-        if (button == 1)
-        {
-            mdown = down;
-        }
-        return true;
+      return world->mouseButton(button, down);
     }
 
     bool SDLEvent(SDL_Event *e)
