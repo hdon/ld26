@@ -62,6 +62,13 @@ void conCB(OGLCONSOLE_Console console, char* line) {
     Game :: LoadMap(tokens[1]);
     return;
   }
+  else if (tokens[0] == "fillmap")
+  {
+    CHECK_ARGS(2);
+    unsigned char tile;
+    tile = atoi(tokens[1].c_str());
+    Game :: fillMap(tile);
+  }
   else
   {
     OGLCONSOLE_Print("Unknown command: \"%s\"\n", tokens[0].c_str());
@@ -213,7 +220,10 @@ int main(int argc, char **argv)
                 case SDL_KEYDOWN:
                     if (event.key.keysym.sym == SDLK_ESCAPE
                             ||  event.key.keysym.sym == SDLK_q)
-                        quit = 1;
+                    {
+                      quit = 1;
+                      break;
+                    }
 
                     // TODO: Change this into an FPS display toggle?
                     else if (event.key.keysym.sym == SDLK_f)
@@ -227,7 +237,12 @@ int main(int argc, char **argv)
 
                         fps_timer = t;
                         fps_counter = 0;
+                        break;
                     }
+                
+                // pass through
+                case SDL_KEYUP:
+                    Game::Key(event.key.keysym.sym, event.type == SDL_KEYDOWN);
                     break;
             }
 

@@ -436,5 +436,16 @@ namespace Game
       OGLCONSOLE_Print("loaded map file \"%s\"\n", filename.c_str());
       return true;
     }
+
+    void fillMap(unsigned char tile)
+    {
+      if (activeWorld->validateCursor())
+      {
+        TileRaft* raft = activeWorld->rafts[activeWorld->cursorRaft];
+        for (int y=0; y<raft->height; y++)
+        for (int x=0; x<raft->width; x++)
+          raft->tiles[x+y*raft->width] = tile;
+      }
+    }
 };
 

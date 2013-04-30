@@ -16,6 +16,8 @@ namespace Game
 
     bool SaveMap(std::string filename);
     bool LoadMap(std::string filename);
+
+    void fillMap(unsigned char tile);
 };
 #endif
 
